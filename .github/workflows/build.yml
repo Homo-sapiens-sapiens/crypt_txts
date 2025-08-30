@@ -2,27 +2,24 @@ name: Build Kivy APK
 
 on:
   workflow_dispatch:
+  push:
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Build with Docker (kivy/buildozer)
+        run: |
+          docker run --rm -v ${{ github.workspace }}:/home/user/app \
+            kivy/buildozer buildozer -v android debug
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v3
         with:
-          python-version: '3.10'
-
-      - name: Install dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y buildozer zip unzip openjdk-17-jdk
-          pip install --upgrade Cython virtualenv
-
-      - name: Build APK
-        run: |
-          pip install buildozer
-          buildozer android debug
+          name: my-kivy-apk
+          path: bin/*.apk
