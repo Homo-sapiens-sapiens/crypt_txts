@@ -13,10 +13,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Docker Buildozer
+      - name: Disable BuildKit
+        run: |
+          echo "DOCKER_BUILDKIT=0" >> $GITHUB_ENV
+          echo "COMPOSE_DOCKER_CLI_BUILD=0" >> $GITHUB_ENV
+
+      - name: Build with Buildozer
         run: |
           docker pull kivy/buildozer:latest
           docker run --rm \
             -v ${{ github.workspace }}:/home/user/app \
             kivy/buildozer:latest \
             buildozer -v android debug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-apk
+          path: bin/*.apk
