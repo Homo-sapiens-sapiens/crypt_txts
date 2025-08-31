@@ -1,31 +1,22 @@
-name: Build Kivy APK
+name: Build APK
 
 on:
-  workflow_dispatch:   # запуск вручную
   push:
-    branches: [ main ] # или при пуше в main
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-22.04
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Disable BuildKit
-        run: echo "DOCKER_BUILDKIT=0" >> $GITHUB_ENV
-
-      - name: Pull Buildozer Docker image
-        run: docker pull kivy/buildozer:stable
-
-      - name: Build APK with Buildozer
+      - name: Set up Docker Buildozer
         run: |
-          docker run --rm -v ${{ github.workspace }}:/home/user/app \
-            kivy/buildozer:stable buildozer -v android debug
-
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: my-kivy-apk
-          path: bin/*.apk
+          docker pull kivy/buildozer:latest
+          docker run --rm \
+            -v ${{ github.workspace }}:/home/user/app \
+            kivy/buildozer:latest \
+            buildozer -v android debug
