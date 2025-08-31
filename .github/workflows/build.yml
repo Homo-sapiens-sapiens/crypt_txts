@@ -17,17 +17,32 @@ jobs:
         run: |
           echo "DOCKER_BUILDKIT=0" >> $GITHUB_ENV
           echo "COMPOSE_DOCKER_CLI_BUILD=0" >> $GITHUB_ENV
+          
+      - name: Cache Buildozer
+        uses: actions/cache@v3
+        with:
+          path: |
+            .buildozer
+            .gradle
+          key: ${{ runner.os }}-buildozer-${{ hashFiles('**/*.spec') }}
+          restore-keys: |
+            ${{ runner.os }}-buildozer-
+
+      - name: Pull buildozer image
+        run: |
+          export DOCKER_BUILDKIT=0
+          export COMPOSE_DOCKER_CLI_BUILD=0
+          docker pull kivy/buildozer:master
 
       - name: Build with Buildozer
         run: |
-          docker pull kivy/buildozer:latest
           docker run --rm \
             -v ${{ github.workspace }}:/home/user/app \
-            kivy/buildozer:latest \
+            -v ${{ github.workspace }}/.buildozer:/home/user/.buildozer \
+            -v ${{ github.workspace }}/.gradle:/home/user/.gradle \
+            kivy/buildozer:master \
             buildozer -v android debug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-apk
-          path: bin/*.apk
